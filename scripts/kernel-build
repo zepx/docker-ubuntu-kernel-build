@@ -2,7 +2,7 @@
 
 set -e
 
-KERNEL_MAJOR="${KERNEL_MAJOR:-4.4.0}"
+KERNEL_MAJOR="${KERNEL_MAJOR:-4.15.0}"
 BUILD_TYPE="${BUILD_TYPE:-fast}"
 BUILD_CLEAN="${BUILD_CLEAN:-n}"
 BUILD_TAG="${BUILD_TAG:-hardcore}"
@@ -16,7 +16,7 @@ function get-latest-kernel-version() {
 function install-kernel-source() {
   # source the kernel
   apt-get update >/dev/null
-  apt-get source linux-image-$(get-latest-kernel-version)-generic
+  apt-get source linux
 }
 
 function patch-kernel() {
