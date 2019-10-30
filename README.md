@@ -50,3 +50,10 @@ This will be the directory where the kernel is built. It should be owned by a us
 ### `/patches`
 
 This is a directory containing patch files to apply against the kernel sources before building.
+
+## memo
+
+```
+docker build -t kernel-build .
+docker run -it --rm -v ~/kbuild:/data -v ~/linux-patches:/patches -e KERNEL_MAJOR=4.15.0 --entrypoint "/bin/bash" kernel-build
+```
