@@ -13,7 +13,7 @@ RUN sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
 
 RUN apt-get update >/dev/null
 
-RUN apt-get install -y apt-utils libncurses-dev flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf linux-tools-$(uname -r) pkg-config-dbgsym >/dev/null
+RUN apt-get install -y apt-utils libncurses-dev flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf linux-tools-$(uname -r) >/dev/null
 
 RUN apt-get build-dep -y linux linux-image-$(uname -r)
 
