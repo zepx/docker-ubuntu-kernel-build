@@ -15,7 +15,9 @@ RUN apt-get update >/dev/null
 
 RUN apt-get install -y apt-utils libncurses-dev flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf linux-tools-$(uname -r) >/dev/null
 
-RUN apt-get build-dep -y linux linux-image-$(uname -r)
+RUN apt-get build-dep -y linux-image-$(uname -r) >/dev/null && \
+    apt-get install -y fakeroot cpio bc libssl-dev gawk wget kmod dkms bison flex libelf-dev fakeroot build-essential crash kexec-tools makedumpfile kernel-wedge libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev libudev-dev pciutils-dev rsync libiberty-dev linux-libc-dev >/dev/null && \
+    apt-get clean >/dev/null
 
 RUN install --directory -m 0755 /data && \
     install --directory -m 0755 /patches
