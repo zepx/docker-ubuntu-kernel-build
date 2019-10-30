@@ -5,6 +5,7 @@ MAINTAINER Fx kirin <fx.kirin@gmail.com>
 ENV KERNEL_MAJOR=4.15.0
 ENV LOCALVERSION=-kirin
 ENV TZ=Asia/Tokyo
+ENV DEBIAN_FRONTEND noninteractive
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 
