@@ -17,7 +17,7 @@ function install-kernel-source() {
   # source the kernel
   apt-get update >/dev/null
   apt-get source linux-source-${KERNEL_MAJOR}
-  apt-get install -y linux-tools-$(get-latest-kernel-version)-generic/$(lsb_release -c | awk '{print $2}')-updates
+  apt-get install -y linux-tools-$(get-latest-kernel-version)
 }
 
 function patch-kernel() {
