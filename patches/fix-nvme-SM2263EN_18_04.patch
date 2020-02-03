@@ -1,14 +1,3 @@
---- a/Makefile	2020-02-03 16:16:59.214528941 +0900
-+++ b/Makefile	2020-02-03 16:23:27.630611536 +0900
-@@ -2,7 +2,7 @@
- VERSION = 4
- PATCHLEVEL = 15
- SUBLEVEL = 18
--EXTRAVERSION =
-+EXTRAVERSION = koala
- NAME = Fearless Coyote
- 
- # *DOCUMENTATION*
 --- a/drivers/nvme/host/core.c	2020-02-03 16:16:59.798535939 +0900
 +++ b/drivers/nvme/host/core.c	2020-02-03 15:53:36.361798537 +0900
 @@ -467,10 +467,21 @@

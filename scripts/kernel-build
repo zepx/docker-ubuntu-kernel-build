@@ -3,7 +3,7 @@
 set -e
 
 KERNEL_MAJOR="${KERNEL_MAJOR:-4.15.0}"
-BUILD_TYPE="${BUILD_TYPE:-fast}"
+BUILD_TYPE="${BUILD_TYPE:-full}"
 BUILD_CLEAN="${BUILD_CLEAN:-n}"
 BUILD_TAG="${BUILD_TAG:-hardcore}"
 
@@ -50,15 +50,15 @@ function update-kernel-version() {
     cd linux-${KERNEL_MAJOR}
 
     local latest_kernel=$(head -n 1 debian.master/changelog | grep -oP '(?<=\()[^)]+(?=\))')
-    local latest_kernel_tag="$(echo $latest_kernel | grep -oP "(?<=\+)${build_tag}$")"
+    local latest_kernel_tag="$(echo $latest_kernel | grep -oP "(?<=\+)${BUILD_TAG}$")"
 
-    if [ "$latest_kernel_tag" != "$build_tag" ]; then
+    if [ "$latest_kernel_tag" != "$BUILD_TAG" ]; then
       # tag it up
       local line="$(head -n 1 debian.master/changelog)"
       local before="$(echo "$line" | grep -oP '^.*\(')"
       local after="$(echo "$line" | grep -oP '\).*$')"
 
-      sed -i "1 s|^.*$|${before}${latest_kernel}+${build_tag}${after}|" debian.master/changelog
+      sed -i "1 s|^.*$|${before}${latest_kernel}+${BUILD_TAG}${after}|" debian.master/changelog
     fi
   )
 
