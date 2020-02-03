@@ -1,0 +1,101 @@
+--- a/Makefile	2020-02-03 16:16:59.214528941 +0900
++++ b/Makefile	2020-02-03 16:23:27.630611536 +0900
+@@ -2,7 +2,7 @@
+ VERSION = 4
+ PATCHLEVEL = 15
+ SUBLEVEL = 18
+-EXTRAVERSION =
++EXTRAVERSION = koala
+ NAME = Fearless Coyote
+ 
+ # *DOCUMENTATION*
+--- a/drivers/nvme/host/core.c	2020-02-03 16:16:59.798535939 +0900
++++ b/drivers/nvme/host/core.c	2020-02-03 15:53:36.361798537 +0900
+@@ -467,10 +467,21 @@
+ 		struct nvme_command *cmnd)
+ {
+ 	unsigned short segments = blk_rq_nr_discard_segments(req), n = 0;
++    unsigned short alloc_size = segments;
+ 	struct nvme_dsm_range *range;
+ 	struct bio *bio;
+ 
+-	range = kmalloc_array(segments, sizeof(*range), GFP_ATOMIC);
++    /*
++     * Some SSDs requires address to be alligned to page size
++     * Reference: https://bugzilla.kernel.org/show_bug.cgi?id=202665#c49     *
++     */
++    if (ns->ctrl->quirks & NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE) {
++        alloc_size = round_up(segments, PAGE_SIZE / sizeof(*range));
++    }
++
++    range = kmalloc_array(alloc_size, sizeof(*range),
++                            GFP_ATOMIC | __GFP_NOWARN);
++
+ 	if (!range)
+ 		return BLK_STS_RESOURCE;
+ 
+--- a/drivers/nvme/host/nvme.h	2020-02-03 16:16:59.802535987 +0900
++++ b/drivers/nvme/host/nvme.h	2020-02-03 15:55:15.342265783 +0900
+@@ -91,6 +91,11 @@
+ 	 * Ignore device provided subnqn.
+ 	 */
+ 	NVME_QUIRK_IGNORE_DEV_SUBNQN		= (1 << 8),
++
++    /*
++     * Discard command should be aligned to a PAGE_SIZE
++     */
++    NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE   = (1 << 11),
+ };
+ 
+ /*
+--- a/drivers/nvme/host/pci.c	2020-02-03 16:16:59.802535987 +0900
++++ b/drivers/nvme/host/pci.c	2020-02-03 16:10:16.510493683 +0900
+@@ -2794,9 +2794,13 @@
+ 				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0xf1a5),	/* Intel 600P/P3100 */
+ 		.driver_data = NVME_QUIRK_NO_DEEPEST_PS |
+-				NVME_QUIRK_MEDIUM_PRIO_SQ },
++				NVME_QUIRK_MEDIUM_PRIO_SQ |
++                NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
+ 	{ PCI_VDEVICE(INTEL, 0xf1a6),	/* Intel 760p/Pro 7600p */
+-		.driver_data = NVME_QUIRK_IGNORE_DEV_SUBNQN, },
++		.driver_data = NVME_QUIRK_IGNORE_DEV_SUBNQN |
++                       NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_VDEVICE(INTEL, 0xf1a8),	/* Intel 660P */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE },
+ 	{ PCI_VDEVICE(INTEL, 0x5845),	/* Qemu emulated controller */
+ 		.driver_data = NVME_QUIRK_IDENTIFY_CNS, },
+ 	{ PCI_DEVICE(0x1c58, 0x0003),	/* HGST adapter */
+@@ -2807,6 +2811,32 @@
+ 		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
+ 	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */
+ 		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
++    { PCI_DEVICE(0x1987, 0x5016),   /* Phison E16 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x1987, 0x5012),   /* Phison E12 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2265),   /* Silicon Motion SM2265 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2263),   /* Silicon Motion SM2263 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2262),   /* Silicon Motion SM2262 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2260),   /* Silicon Motion SM2260 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0xc0a9, 0x2263),   /* Crucial P1 (SM2263) */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2265),   /* Silicon Motion SM2265 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2263),   /* Silicon Motion SM2263 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2262),   /* Silicon Motion SM2262 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x126f, 0x2260),   /* Silicon Motion SM2260 */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0xc0a9, 0x2263),   /* Crucial P1 (SM2263) */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
++    { PCI_DEVICE(0x1cc1, 0x8201),   /* SX8200 Pro (SM2263EN) */
++        .driver_data = NVME_QUIRK_DISCARD_ALIGN_TO_PAGE_SIZE, },
+ 	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
+ 		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
+ 	{ PCI_DEVICE(0x1d1d, 0x1f1f),	/* LighNVM qemu device */
